@@ -641,17 +641,17 @@ class BooleanLiteral extends Literal, @booleanliteral {
 /**
  * An integer literal. For example, `23`.
  *
- * An integer literal can never be negative except when:
- * - It is written in binary, octal or hexadecimal notation
- * - It is written in decimal notation, has the value `2147483648` and is preceded
- *   by a minus; in this case the value of the IntegerLiteral is -2147483648 and
- *   the preceding minus will *not* be modeled as `MinusExpr`.
- *
- * In all other cases the preceding minus, if any, will be modeled as a separate
- * `MinusExpr`.
- *
- * The last exception is necessary because `2147483648` on its own would not be
+ * A preceding minus, if any, is always modeled as separate `MinusExpr`,
+ * unless the literal is written in decimal notation and has the value
+ * `2147483648`. In that case the value of the IntegerLiteral is
+ * -2147483648 and the preceding minus will *not* be modeled as `MinusExpr`.
+ * This exception is necessary because `2147483648` on its own would not be
  * a valid integer literal (and could also not be parsed as CodeQL `int`).
+ *
+ * Therefore the value of an IntegerLiteral will only be negative if it is
+ * written in decimal notation and represents -2147483648, or if it is
+ * written in binary, octal or hexadecimal notation and the most significant
+ * bit (MSB), representing the sign, is set.
  */
 class IntegerLiteral extends Literal, @integerliteral {
   /** Gets the int representation of this literal. */
@@ -663,18 +663,17 @@ class IntegerLiteral extends Literal, @integerliteral {
 /**
  * A long literal. For example, `23L`.
  *
- * A long literal can never be negative except when:
- * - It is written in binary, octal or hexadecimal notation
- * - It is written in decimal notation, has the value `9223372036854775808` and
- *   is preceded by a minus; in this case the value of the LongLiteral is
- *   -9223372036854775808 and the preceding minus will *not* be modeled as
- *   `MinusExpr`.
+ * A preceding minus, if any, is always modeled as separate `MinusExpr`,
+ * unless the literal is written in decimal notation and has the value
+ * `9223372036854775808`. In that case the value of the LongLiteral is
+ * -9223372036854775808 and the preceding minus will *not* be modeled as
+ * `MinusExpr`. This exception is necessary because `9223372036854775808`
+ * on its own would not be a valid long literal.
  *
- * In all other cases the preceding minus, if any, will be modeled as a separate
- * `MinusExpr`.
- *
- * The last exception is necessary because `9223372036854775808` on its own
- * would not be a valid long literal.
+ * Therefore the value of a LongLiteral will only be negative if it is
+ * written in decimal notation and represents -9223372036854775808, or if
+ * it is written in binary, octal or hexadecimal notation and the most
+ * significant bit (MSB), representing the sign, is set.
  */
 class LongLiteral extends Literal, @longliteral {
   override string getAPrimaryQlClass() { result = "LongLiteral" }
