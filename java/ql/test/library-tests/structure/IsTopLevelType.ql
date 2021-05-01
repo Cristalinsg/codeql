@@ -5,5 +5,5 @@
 import default
 
 from TopLevelType tp
-where tp.fromSource() and tp.getFile().toString() = "A"
+where tp.fromSource() and tp.getCompilationUnit().getName() = "A"
 select tp, tp.getPackage()
