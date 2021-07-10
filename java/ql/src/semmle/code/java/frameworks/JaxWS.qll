@@ -291,7 +291,7 @@ class JaxRSProducesAnnotation extends JaxRSAnnotation {
    * Gets a declared content type that can be produced by this resource.
    */
   string getADeclaredContentType() {
-    result = this.getAValue().(CompileTimeConstantExpr).getStringValue()
+    result = this.getAValue("value").(CompileTimeConstantExpr).getStringValue()
     or
     exists(Field jaxMediaType |
       // Accesses to static fields on `MediaType` class do not have constant strings in the database

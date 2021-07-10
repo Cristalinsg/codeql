@@ -624,6 +624,17 @@ class Class extends RefType, @class {
 
   override RefType getSourceDeclaration() { classes(this, _, _, result) }
 
+  private Annotation getAnAnnotation(AnnotationType t) {
+    result.getType() = t
+    and (
+      result = getADeclaredAnnotation()
+      exists(AnnotationType tp | tp = result.getType() |
+        tp.isInherited() and
+        not exists(Annotation ann | ann = RefType.super.getAnAnnotation() | ann.getType() = tp) and
+        result = this.getASupertype().(Class).getAnAnnotation()
+    )
+  }
+ 
   /**
    * Gets an annotation that applies to this class.
    *

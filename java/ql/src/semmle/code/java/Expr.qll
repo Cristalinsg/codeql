@@ -1357,6 +1357,11 @@ class InstanceOfExpr extends Expr, @instanceofexpr {
   /** Gets the access to the type on the right-hand side of the `instanceof` operator. */
   Expr getTypeName() { result.isNthChildOf(this, 1) }
 
+  /**
+   * Gets the type this `instanceof` expression checks for.
+   */
+  RefType getCheckedType() { result = getTypeName().getType() }
+
   /** Gets a printable representation of this expression. */
   override string toString() { result = "...instanceof..." }
 
@@ -1448,6 +1453,12 @@ class VariableAssign extends VariableUpdate {
 class TypeLiteral extends Expr, @typeliteral {
   /** Gets the access to the type whose class is accessed. */
   Expr getTypeName() { result.getParent() = this }
+
+  /**
+   * Gets the type this type literal refers to. For example for `String.class` the
+   * result is the type representing `String`.
+   */
+  Type getReferencedType() { result = getTypeName().getType() }
 
   /** Gets a printable representation of this expression. */
   override string toString() { result = this.getTypeName().toString() + ".class" }

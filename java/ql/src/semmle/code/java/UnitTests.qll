@@ -160,15 +160,13 @@ class TestNGTestMethod extends Method {
     exists(TestNGTestAnnotation testAnnotation |
       testAnnotation = getAnAnnotation() and
       // The data provider must have the same name as the referenced data provider
-      result.getDataProviderName() =
-        testAnnotation.getValue("dataProvider").(StringLiteral).getRepresentedString()
+      result.getDataProviderName() = testAnnotation.getValueString("dataProvider")
     |
       // Either the data provider should be on the current class, or a supertype
       getDeclaringType().getAnAncestor() = result.getDeclaringType()
       or
       // Or the data provider class should be declared
-      result.getDeclaringType() =
-        testAnnotation.getValue("dataProviderClass").(TypeLiteral).getTypeName().getType()
+      result.getDeclaringType() = testAnnotation.getValueClass("dataProviderClass")
     )
   }
 }
@@ -227,7 +225,7 @@ class TestNGListenersAnnotation extends TestNGAnnotation {
    * Gets a listener defined in this annotation.
    */
   TestNGListenerImpl getAListener() {
-    result = getAValue("value").(TypeLiteral).getTypeName().getType()
+    result = getAValue("value").(TypeLiteral).getReferencedType()
   }
 }
 
@@ -303,7 +301,7 @@ class JUnitCategoryAnnotation extends Annotation {
         literal = value.(ArrayCreationExpr).getInit().getAnInit()
       )
     |
-      result = literal.getTypeName().getType()
+      result = literal.getReferencedType()
     )
   }
 }

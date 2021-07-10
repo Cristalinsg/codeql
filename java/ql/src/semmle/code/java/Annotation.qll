@@ -44,11 +44,64 @@ class Annotation extends @annotation, Expr {
     result = this.getType().getAnnotationElement(name)
   }
 
-  /** Gets a value of an annotation element. */
+  /**
+   * Gets a value of an annotation element. This includes default values in case
+   * no explicit value is specified.
+   */
   Expr getAValue() { filteredAnnotValue(this, _, result) }
 
-  /** Gets the value of the annotation element with the specified `name`. */
+  /**
+   * Gets the value of the annotation element with the specified `name`.
+   * This includes default values in case no explicit value is specified.
+   */
   Expr getValue(string name) { filteredAnnotValue(this, this.getAnnotationElement(name), result) }
+
+  /**
+   * If the value type of the annotation element with the specified `name` is an enum type,
+   * gets the enum constant used as value for that element. This includes default values in
+   * case no explicit value is specified.
+   */
+  EnumConstant getValueEnumConstant(string name) { result = getValue(name).(FieldRead).getField() }
+
+  /**
+   * If the value type of the annotation element with the specified `name` is `String`,
+   * gets the string value used for that element. This includes default values in case no
+   * explicit value is specified.
+   */
+  string getValueString(string name) {
+    // Uses CompileTimeConstantExpr instead of StringLiteral because value can
+    // be read of final variable as well
+    result = getValue(name).(CompileTimeConstantExpr).getStringValue()
+  }
+
+  /**
+   * If the value type of the annotation element with the specified `name` is `int`,
+   * gets the int value used for that element. This includes default values in case no
+   * explicit value is specified.
+   */
+  int getValueInt(string name) {
+    // Uses CompileTimeConstantExpr instead of IntegerLiteral because value can
+    // be read of final variable as well
+    result = getValue(name).(CompileTimeConstantExpr).getIntValue()
+  }
+
+  /**
+   * If the value type of the annotation element with the specified `name` is `boolean`,
+   * gets the boolean value used for that element. This includes default values in case
+   * no explicit value is specified.
+   */
+  boolean getValueBoolean(string name) {
+    // Uses CompileTimeConstantExpr instead of BooleanLiteral because value can
+    // be read of final variable as well
+    result = getValue(name).(CompileTimeConstantExpr).getBooleanValue()
+  }
+
+  /**
+   * If the annotation element with the specified `name` has a Java `Class` as value type,
+   * gets the referenced type used as value for that element. This includes default values
+   * in case no explicit value is specified.
+   */
+  Type getValueClass(string name) { result = getValue(name).(TypeLiteral).getReferencedType() }
 
   /** Gets the element being annotated. */
   Element getTarget() { result = getAnnotatedElement() }
@@ -60,16 +113,30 @@ class Annotation extends @annotation, Expr {
 
   /**
    * Gets a value of the annotation element with the specified `name`, which must be declared as an array
-   * type.
+   * type. This includes default values in case no explicit value is specified.
    *
    * If the annotation element is defined with an array initializer, then the returned value will
    * be one of the elements of that array. Otherwise, the returned value will be the single
    * expression defined for the value.
    */
-  Expr getAValue(string name) {
+  Expr getAValue(string name) { result = getAValue(name, _) }
+
+  /**
+   * Gets the value at a given index of the annotation element with the specified `name`, which must be
+   * declared as an array type. This includes default values in case no explicit value is specified.
+   *
+   * If the annotation element is defined with an array initializer, then the returned value will
+   * be the elements at the given index of that array. Otherwise, if the index is 0 the returned value
+   * will be the single expression defined for the value.
+   */
+  Expr getAValue(string name, int index) {
     getType().getAnnotationElement(name).getType() instanceof Array and
     exists(Expr value | value = getValue(name) |
-      if value instanceof ArrayInit then result = value.(ArrayInit).getAnInit() else result = value
+      if value instanceof ArrayInit
+      then result = value.(ArrayInit).getInit(index)
+      else (
+        index = 0 and result = value
+      )
     )
   }
 
@@ -99,18 +166,67 @@ private predicate sourceAnnotValue(Annotation a, Method m, Expr val) {
 
 /** An abstract representation of language elements that can be annotated. */
 class Annotatable extends Element {
-  /** Holds if this element has an annotation. */
-  predicate hasAnnotation() { exists(Annotation a | a.getAnnotatedElement() = this) }
+  /** Holds if this element has an annotation, including inherited annotations. */
+  predicate hasAnnotation() { exists(getAnAnnotation()) }
 
-  /** Holds if this element has the specified annotation. */
+  /** Holds if this element has a declared annotation, excluding inherited annotations. */
+  predicate hasDeclaredAnnotation() { exists(getADeclaredAnnotation()) }
+
+  /**
+   * Holds if this element has the specified annotation, including inherited
+   * annotations.
+   */
   predicate hasAnnotation(string package, string name) {
     exists(AnnotationType at | at = getAnAnnotation().getType() |
       at.nestedName() = name and at.getPackage().getName() = package
     )
   }
 
-  /** Gets an annotation that applies to this element. */
-  Annotation getAnAnnotation() { result.getAnnotatedElement() = this }
+  /**
+   * Gets an annotation that applies to this element, including inherited annotations.
+   */
+  Annotation getAnAnnotation() { result = getADeclaredAnnotation() }
+
+  /**
+   * Gets an annotation that is declared on this element, excluding inherited annotations.
+   */
+  Annotation getADeclaredAnnotation() { result.getAnnotatedElement() = this }
+
+  /** Gets an indirect (repeated) annotation. */
+  // 'indirect' as defined by https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/AnnotatedElement.html
+  private Annotation getAnIndirectAnnotation() {
+    exists(AnnotationType t, Annotation containerAnn | t = result.getType() and containerAnn = getADeclaredAnnotation() and containerAnn.getType() = t.getContainingAnnotationType() |
+      result = containerAnn.getAValue("value")
+    )
+  }
+
+  privateAnnotation getAnAssociatedAnnotation() {
+    exists(AnnotationType t | t = result.getType() |
+      if getADeclaredAnnotation().getType() = t or getAnIndirectAnnotation().getType() = t then (
+        result = getADeclaredAnnotation() or getAnIndirectAnnotation()
+      ) else (
+        this instanceof Class and t.isInherited() and result = this.(Class).getASupertype().(Class).getAnA
+      )
+    )
+  }
+
+  /**
+   * Gets an annotation _associated_ with this element, that is:
+   * - An annotation directly present on this element, or
+   * - An annotation indirectly present on this element (in the form of a repeated annotation), or
+   * - If an annotation of a type is neither directly nor indirectly present
+   *   the result is an associated inherited annotation (recursively)
+   */
+  // 'associated' as defined by https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/AnnotatedElement.html
+  Annotation getAnAssociatedAnnotation() {
+    exists(AnnotationType t | t = result.getType() |
+      if getADeclaredAnnotation().getType() = t or getAnIndirectAnnotation().getType() = t then (
+        result = getADeclaredAnnotation() or getAnIndirectAnnotation()
+      ) else (
+        this instanceof Class and t.isInherited() and result = this.(Class).getASupertype().(Class).getAnA
+      )
+    )
+  }
 
   /**
    * Holds if this or any enclosing `Annotatable` has a `@SuppressWarnings("<category>")`
@@ -149,10 +265,54 @@ class AnnotationType extends Interface {
 
   /** Holds if this annotation type is annotated with the meta-annotation `@Inherited`. */
   predicate isInherited() {
-    exists(Annotation ann |
-      ann.getAnnotatedElement() = this and
-      ann.getType().hasQualifiedName("java.lang.annotation", "Inherited")
-    )
+    getADeclaredAnnotation().getType().hasQualifiedName("java.lang.annotation", "Inherited")
+  }
+
+  /** Holds if this annotation type is annotated with the meta-annotation `@Documented`. */
+  predicate isDocumented() {
+    getADeclaredAnnotation().getType().hasQualifiedName("java.lang.annotation", "Documented")
+  }
+
+  /**
+   * Gets the retention policy of this annotation type, that is, the name of one of the
+   * enum constants of `java.lang.annotation.RetentionPolicy`. If no explicit retention
+   * policy is specified the result is `CLASS`.
+   */
+  string getRetentionPolicy() {
+    if getADeclaredAnnotation() instanceof RetentionAnnotation
+    then result = getADeclaredAnnotation().(RetentionAnnotation).getRetentionPolicy()
+    else
+      // If not explicitly specified retention is CLASS
+      result = "CLASS"
+  }
+
+  /**
+   * Holds if the element type is a possible target for this annotation type.
+   * The `elementType` is the name of one of the `java.lang.annotation.ElementType`
+   * enum constants. If no explicit target is specified for this annotation type
+   * it is considered to be applicable to all elements.
+   */
+  // Note: Cannot use a predicate with string as result because annotation type without
+  // explicit @Target can be applied to all targets, requiring to hardcode element types here
+  bindingset[elementType]
+  predicate isATargetType(string elementType) {
+    if getADeclaredAnnotation() instanceof TargetAnnotation
+    then elementType = getADeclaredAnnotation().(TargetAnnotation).getATargetElementType()
+    else
+      // No Target annotation means "applicable to all contexts" since JDK 14, see https://bugs.openjdk.java.net/browse/JDK-8231435
+      // The compiler does not completely implement that, but pretend it did
+      any()
+  }
+
+  /** Holds if this annotation type is annotated with the meta-annotation `@Repeatable`. */
+  predicate isRepeatable() { getADeclaredAnnotation() instanceof RepeatableAnnotation }
+
+  /**
+   * If this annotation type is annotationed with the meta-annotation `@Repeatable`,
+   * gets the annotation type which acts as _containing annotation type_.
+   */
+  AnnotationType getContainingAnnotationType() {
+    result = getADeclaredAnnotation().(RepeatableAnnotation).getContainingType()
   }
 }
 
