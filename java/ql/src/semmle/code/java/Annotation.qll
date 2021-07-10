@@ -166,18 +166,31 @@ private predicate sourceAnnotValue(Annotation a, Method m, Expr val) {
 
 /** An abstract representation of language elements that can be annotated. */
 class Annotatable extends Element {
-  /** Holds if this element has an annotation. */
-  predicate hasAnnotation() { exists(Annotation a | a.getAnnotatedElement() = this) }
+  /** Holds if this element has an annotation, including inherited annotations. */
+  predicate hasAnnotation() { exists(getAnAnnotation()) }
 
-  /** Holds if this element has the specified annotation. */
+  /** Holds if this element has a declared annotation, excluding inherited annotations. */
+  predicate hasDeclaredAnnotation() { exists(getADeclaredAnnotation()) }
+
+  /**
+   * Holds if this element has the specified annotation, including inherited
+   * annotations.
+   */
   predicate hasAnnotation(string package, string name) {
     exists(AnnotationType at | at = getAnAnnotation().getType() |
       at.nestedName() = name and at.getPackage().getName() = package
     )
   }
 
-  /** Gets an annotation that applies to this element. */
-  Annotation getAnAnnotation() { result.getAnnotatedElement() = this }
+  /**
+   * Gets an annotation that applies to this element, including inherited annotations.
+   */
+  Annotation getAnAnnotation() { result = getADeclaredAnnotation() }
+
+  /**
+   * Gets an annotation that is declared on this element, excluding inherited annotations.
+   */
+  Annotation getADeclaredAnnotation() { result.getAnnotatedElement() = this }
 
   /**
    * Holds if this or any enclosing `Annotatable` has a `@SuppressWarnings("<category>")`
