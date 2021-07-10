@@ -306,9 +306,7 @@ class SpringQualifierDefinitionAnnotation extends Annotation {
   /**
    * Gets the value of the qualifier field for this qualifier.
    */
-  string getQualifierValue() {
-    result = getValue("value").(CompileTimeConstantExpr).getStringValue()
-  }
+  string getQualifierValue() { result = getValueString("value") }
 }
 
 /**
@@ -320,9 +318,7 @@ class SpringQualifierAnnotation extends Annotation {
   /**
    * Gets the value of the qualifier field for this qualifier.
    */
-  string getQualifierValue() {
-    result = getValue("value").(CompileTimeConstantExpr).getStringValue()
-  }
+  string getQualifierValue() { result = getValueString("value") }
 
   /**
    * Gets the bean definition in an XML file that this qualifier resolves to, if any.
@@ -345,7 +341,7 @@ class SpringResourceAnnotation extends Annotation {
   /**
    * Gets the specified name value, if any.
    */
-  string getNameValue() { result = getValue("name").(CompileTimeConstantExpr).getStringValue() }
+  string getNameValue() { result = getValueString("name") }
 
   /**
    * Gets the bean definition in an XML file that the resource resolves to, if any.

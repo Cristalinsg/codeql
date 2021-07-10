@@ -19,15 +19,11 @@ class SuppressWarningsAnnotation extends Annotation {
   SuppressWarningsAnnotation() { this.getType().hasQualifiedName("java.lang", "SuppressWarnings") }
 
   /** Gets the `StringLiteral` of a warning suppressed by this annotation. */
-  StringLiteral getASuppressedWarningLiteral() {
-    result = this.getAValue() or
-    result = this.getAValue().(ArrayInit).getAnInit()
-  }
+  StringLiteral getASuppressedWarningLiteral() { result = this.getAValue(_) }
 
   /** Gets the name of a warning suppressed by this annotation. */
   string getASuppressedWarning() {
-    result = this.getAValue().(StringLiteral).getLiteral() or
-    result = this.getAValue().(ArrayInit).getAnInit().(StringLiteral).getLiteral()
+    result = this.getAValue(_).(CompileTimeConstantExpr).getStringValue()
   }
 }
 
@@ -43,10 +39,7 @@ class TargetAnnotation extends Annotation {
    */
   Expr getATargetExpression() {
     not result instanceof ArrayInit and
-    (
-      result = this.getAValue() or
-      result = this.getAValue().(ArrayInit).getAnInit()
-    )
+    result = this.getAValue(_)
   }
 
   /**
@@ -57,7 +50,7 @@ class TargetAnnotation extends Annotation {
    */
   string getATargetElementType() {
     exists(EnumConstant ec |
-      ec = this.getATargetExpression().(VarAccess).getVariable() and
+      ec = this.getATargetExpression().(FieldRead).getField() and
       ec.getDeclaringType().hasQualifiedName("java.lang.annotation", "ElementType")
     |
       result = ec.getName()
@@ -85,7 +78,7 @@ class RetentionAnnotation extends Annotation {
    */
   string getRetentionPolicy() {
     exists(EnumConstant ec |
-      ec = this.getRetentionPolicyExpression().(VarAccess).getVariable() and
+      ec = this.getRetentionPolicyExpression().(FieldRead).getField() and
       ec.getDeclaringType().hasQualifiedName("java.lang.annotation", "RetentionPolicy")
     |
       result = ec.getName()
