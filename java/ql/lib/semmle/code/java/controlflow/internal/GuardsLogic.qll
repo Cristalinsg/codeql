@@ -162,7 +162,7 @@ private class AbsValChar extends AbstractValue, TAbsValChar {
 
   override string toString() { result = c }
 
-  override Expr getExpr() { result.(CharacterLiteral).getValue() = c }
+  override Expr getExpr() { result.(CharacterLiteral).getStringValue() = c }
 }
 
 private class AbsValString extends AbstractValue, TAbsValString {

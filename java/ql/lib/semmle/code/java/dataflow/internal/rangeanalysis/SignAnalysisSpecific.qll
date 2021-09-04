@@ -186,7 +186,7 @@ private module Impl {
   class UnsignedNumericType = CharacterType;
 
   /** Gets the character value of expression `e`. */
-  string getCharValue(Expr e) { result = e.(CharacterLiteral).getValue() }
+  string getCharValue(Expr e) { result = e.(CharacterLiteral).getStringValue() }
 
   /** Gets the constant `float` value of non-`ConstantIntegerExpr` expressions. */
   float getNonIntegerValue(Expr e) {

@@ -17,17 +17,17 @@
 | StringLiterals.java:23:3:23:18 | "\\uaBcDeF\\u0aB1" | \uabcdeF\u0ab1 | \uabcdeF\u0ab1 |
 | StringLiterals.java:24:3:24:16 | "\\uD800\\uDC00" | \ud800\udc00 | \ud800\udc00 |
 | StringLiterals.java:25:3:25:16 | "\\uDBFF\\uDFFF" | \udbff\udfff | \udbff\udfff |
-| StringLiterals.java:27:3:27:10 | "\\uD800" | ? | ? |
-| StringLiterals.java:28:3:28:10 | "\\uDC00" | ? | ? |
-| StringLiterals.java:29:3:29:31 | "hello\\uD800hello\\uDC00world" | hello?hello?world | hello?hello?world |
-| StringLiterals.java:31:3:31:16 | "\\u005C\\u0022" | " | " |
-| StringLiterals.java:32:8:32:20 | 2\\u0061\\u0022 | a | a |
-| StringLiterals.java:38:3:38:19 | "hello" + "world" | helloworld | helloworld |
-| StringLiterals.java:39:10:39:12 | "a" | a | a |
-| StringLiterals.java:40:3:40:5 | "a" | a | a |
+| StringLiterals.java:28:3:28:10 | "\\uD800" | ? | ? |
+| StringLiterals.java:29:3:29:10 | "\\uDC00" | ? | ? |
+| StringLiterals.java:30:3:30:31 | "hello\\uD800hello\\uDC00world" | hello?hello?world | hello?hello?world |
+| StringLiterals.java:32:3:32:16 | "\\u005C\\u0022" | " | " |
+| StringLiterals.java:33:8:33:20 | 2\\u0061\\u0022 | a | a |
+| StringLiterals.java:39:3:39:19 | "hello" + "world" | helloworld | helloworld |
+| StringLiterals.java:40:10:40:12 | "a" | a | a |
 | StringLiterals.java:41:3:41:5 | "a" | a | a |
-| StringLiterals.java:42:7:42:9 | "a" | a | a |
-| StringLiterals.java:43:3:43:5 | "a" | a | a |
-| StringLiterals.java:44:10:44:12 | "a" | a | a |
-| StringLiterals.java:45:3:45:5 | "a" | a | a |
-| StringLiterals.java:46:9:46:11 | "a" | a | a |
+| StringLiterals.java:42:3:42:5 | "a" | a | a |
+| StringLiterals.java:43:7:43:9 | "a" | a | a |
+| StringLiterals.java:44:3:44:5 | "a" | a | a |
+| StringLiterals.java:45:10:45:12 | "a" | a | a |
+| StringLiterals.java:46:3:46:5 | "a" | a | a |
+| StringLiterals.java:47:9:47:11 | "a" | a | a |

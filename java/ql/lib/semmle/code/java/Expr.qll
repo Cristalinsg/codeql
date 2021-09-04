@@ -296,18 +296,19 @@ class CompileTimeConstantExpr extends Expr {
    *
    * Note that this does not handle the following cases:
    *
-   * - values of type `long`,
-   * - `char` literals.
+   * - values of type `long`.
    */
   cached
   int getIntValue() {
     exists(IntegralType t | this.getType() = t | t.getName().toLowerCase() != "long") and
     (
       exists(string lit | lit = this.(Literal).getValue() |
-        // `char` literals may get parsed incorrectly, so disallow.
+        // Don't parse `char` literal as int, instead get its code point value (see below)
         not this instanceof CharacterLiteral and
         result = lit.toInt()
       )
+      or
+      result = this.(CharacterLiteral).getCodePointValue()
       or
       exists(CastExpr cast, int val |
         cast = this and val = cast.getExpr().(CompileTimeConstantExpr).getIntValue()
@@ -717,6 +718,19 @@ class DoubleLiteral extends Literal, @doubleliteral {
 /** A character literal. For example, `'\n'`. */
 class CharacterLiteral extends Literal, @characterliteral {
   override string getAPrimaryQlClass() { result = "CharacterLiteral" }
+
+  /**
+   * Gets a string which consists of the single character represented by
+   * this literal.
+   */
+  string getStringValue() { result = getValue() }
+
+  /**
+   * Gets the Unicode code point value of the character represented by
+   * this literal. The result is the same as if the Java code had cast
+   * the character to an `int`.
+   */
+  int getCodePointValue() { result = any(int i | i.toUnicode() = getStringValue()) }
 }
 
 /** A string literal. For example, `"hello world"`. */
